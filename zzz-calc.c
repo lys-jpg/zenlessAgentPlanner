@@ -34,11 +34,13 @@ Agent agent1 = Agent_default;
 
 
 struct Wengine_s{
+  int level;
+  int max_level;
   int required_experience;
   int current_experience;
   int required_materials;
   int current_materials;
-}const Wengine_default = { 600000, 0, 0, 0};
+}const Wengine_default = { 1, 60, 600000, 0, 0, 0};
 typedef struct Wengine_s Wengine;
 
 Wengine wengine1 = Wengine_default;
