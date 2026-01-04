@@ -28,11 +28,20 @@ struct Agent_s{
   Skill special;
   Skill ultimate;
 }const Agent_default = { .name = "Anby", .required_experience = 900000, .level = 1, .current_experience = 0, .attack = Skill_default, .dash = Skill_default, .parry = Skill_default, .special = Skill_default, .ultimate = Skill_default };
-
 typedef struct Agent_s Agent;
 
 Agent agent1 = Agent_default;
 
+
+struct Wengine_s{
+  int required_experience;
+  int current_experience;
+  int required_materials;
+  int current_materials;
+}const Wengine_default = { 600000, 0, 0, 0};
+typedef struct Wengine_s Wengine;
+
+Wengine wengine1 = Wengine_default;
 
 
 
