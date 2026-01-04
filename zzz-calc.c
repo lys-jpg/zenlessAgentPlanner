@@ -59,12 +59,19 @@ int remainingLogs(){
 
 int printResults(){
   printf("\n");
-  printf("-----------------------------------------------------\n");
+  printf("=====================================================\n");
+
   printf("Agent: %s , needing a total of %d purple logs to cap.\n", agent1.name, remainingLogs());
   printf("--- Investigator Logs Data ---\n");
   printf("Battery needed to finish: %.1f \n", remainingLogs()/0.18);
-  printf("That's %.1f days worth.\n", (remainingLogs()/0.18)/(240 + 80));
+  printf("That's %.1f days worth., assuming you spend everything.\n", (remainingLogs()/0.18)/(240 + 80));
 
+  printf("--- Skill Material Data ---\n");
+  printf("Skill materials needed: \n");
+  printf("Battery needed to finish: \n");
+  printf("That's -- days worth, assuming you spend everything.\n");
+
+  printf("=====================================================\n");
 }
 
 int getData(){
