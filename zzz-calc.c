@@ -17,7 +17,7 @@ struct Skill_s{
 typedef struct Skill_s Skill;
 
 
-struct Agent{
+struct Agent_s{
   char name[30];
   int required_experience;
   int level;
@@ -27,10 +27,12 @@ struct Agent{
   Skill parry;
   Skill special;
   Skill ultimate;
-};
+}const Agent_default = { .name = "Anby", .required_experience = 900000, .level = 1, .current_experience = 0, .attack = Skill_default, .dash = Skill_default, .parry = Skill_default, .special = Skill_default, .ultimate = Skill_default };
 
+typedef struct Agent_s Agent;
 
-struct Agent agent1 = { .name = "Anby", .required_experience = 900000, .level = 1, .current_experience = 0, .attack = Skill_default, .dash = Skill_default, .parry = Skill_default, .special = Skill_default, .ultimate = Skill_default };
+Agent agent1 = Agent_default;
+
 
 
 
