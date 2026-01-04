@@ -1,4 +1,8 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+#define MAXCHAR 1000
 
 // Battery notes! ---
 // 3.6 logs per 20 battery -> 3 purple logs and 3 blue logs minimum per combat. -> 0.18 logs per 1 point of battery.
@@ -101,9 +105,33 @@ int getData(){
   }
 }
 
+// CSV reader 
+//
+
+int csv(){
+
+  FILE *fp;
+  char row[MAXCHAR];
+
+  fp = fopen("agentExperienceRequirements.csv", "r");
+
+  ;
+
+
+  while (feof(fp) != true){
+    fgets(row, MAXCHAR, fp);
+    printf("Row: %s\n", row);
+  }
+
+  return 0;
+}
+
+
+
 int main(){
-  getData();
-  blueLogstoPurpleLogs();
-  printResults();
-  printf("skill check: %d\n", agent1.ultimate.desired_level);
+  csv();
+  // getData();
+  // blueLogstoPurpleLogs();
+  // printResults();
+  // printf("skill check: %d\n", agent1.ultimate.desired_level);
 }
