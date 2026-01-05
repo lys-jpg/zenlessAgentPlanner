@@ -13,6 +13,12 @@ int investigator_logs_held_blue = 0;
 int investigator_log_value = 3000;
 char exp_progress_flag;
 
+//File paths
+char csvFolder[10] = "csv/";
+char csvAgentExperience[42] = "csv/agentExperienceMaterials.csv"; 
+char csvAgentPromotion[42] = "csv/agentPromotionMaterials.csv";
+char csvSkillUpgrade[42] = "csv/SkillMaterials.csv";
+char csvCoreSkillUpgrade[42] = "csv/coreSkillMaterials.csv";
 
 struct Skill_s{
   int level,max_level,desired_level;
@@ -113,7 +119,7 @@ int csv(){
   FILE *fp;
   char row[MAXCHAR];
 
-  fp = fopen("agentExperienceRequirements.csv", "r");
+  fp = fopen(csvAgentPromotion, "r");
 
   ;
 
