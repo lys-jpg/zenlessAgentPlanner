@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdbool.h>
 #define MAXCHAR 1000
-
+#define LINE_SIZE 1024
 // Battery notes! ---
 // 3.6 logs per 20 battery -> 3 purple logs and 3 blue logs minimum per combat. -> 0.18 logs per 1 point of battery.
 // Agents need 300 logs to cap, that being 900k exp. Purple logs are 3k, Blue logs are 600.
@@ -17,8 +17,46 @@ char exp_progress_flag;
 char csvFolder[10] = "csv/";
 char csvAgentExperience[42] = "csv/agentExperienceMaterials.csv"; 
 char csvAgentPromotion[42] = "csv/agentPromotionMaterials.csv";
-char csvSkillUpgrade[42] = "csv/SkillMaterials.csv";
+char csvSkillUpgrade[42] = "csv/skillMaterials.csv";
 char csvCoreSkillUpgrade[42] = "csv/coreSkillMaterials.csv";
+
+double pullMaterialsFromSheet(const char *filename, int start_row, int column){
+
+
+  FILE *file = fopen(filename, "r");
+  if (!file){
+    perror("failed to open file");
+    return 1;
+  }
+
+  char line[LINE_SIZE];
+  int current_row = 0;
+  double sum = 0.0;
+
+  while(fgets(line, sizeof(line), file)){
+    if (current_row >= start_row){
+      char *token;
+      int current_col = 0;
+
+      token = strtok(line, ",");
+
+      while (token){
+        if (current_col == column){
+          sum += atof(token);
+          break;
+        }
+        token = strtok(NULL, ",");
+        current_col++;
+      }
+    }
+    current_row++;
+  }
+  fclose(file);
+
+  // printf("Sum = %.2f\n", sum);
+  return sum;
+
+}
 
 struct Skill_s{
   int level,max_level,desired_level;
@@ -77,7 +115,7 @@ int printResults(){
   printf("That's %.1f days worth., assuming you spend everything.\n", (remainingLogs()/0.18)/(240 + 80));
 
   printf("--- Skill Material Data ---\n");
-  printf("Skill materials needed: \n");
+  printf("Skill materials needed:%.f basic chips, %.f mid chips and %.f advanced chips.\n", pullMaterialsFromSheet(csvSkillUpgrade,1,2), pullMaterialsFromSheet(csvSkillUpgrade, 1, 3), pullMaterialsFromSheet(csvSkillUpgrade,1,4) );
   printf("Battery needed to finish: \n");
   printf("That's -- days worth, assuming you spend everything.\n");
 
