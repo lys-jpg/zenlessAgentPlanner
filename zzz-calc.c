@@ -135,9 +135,9 @@ int csv(){
 
 
 int main(){
-  csv();
-  // getData();
-  // blueLogstoPurpleLogs();
-  // printResults();
-  // printf("skill check: %d\n", agent1.ultimate.desired_level);
+  // csv();
+  getData();
+  blueLogstoPurpleLogs();
+  printResults();
+  printf("skill check: %d\n", agent1.ultimate.desired_level);
 }
