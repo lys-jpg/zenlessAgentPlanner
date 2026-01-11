@@ -8,6 +8,15 @@
 // 3.6 logs per 20 battery -> 3 purple logs and 3 blue logs minimum per combat. -> 0.18 logs per 1 point of battery.
 // Agents need 300 logs to cap, that being 900k exp. Purple logs are 3k, Blue logs are 600.
 
+
+typedef enum {
+  stateActive,
+  statePassive,
+  stateLoadSave
+} State;
+
+
+
 float investigator_logs_held_purple = 0;
 int investigator_logs_held_blue = 0;
 int investigator_log_value = 3000;
@@ -80,6 +89,45 @@ typedef struct Agent_s Agent;
 
 Agent agent1 = Agent_default;
 
+struct Material_s{
+  char name[30];
+  float heldPurple;
+  float heldBlue;
+  float heldGray;
+  int value;
+  float conversionRateGrayToBlue;
+  float conversionRateBlueToPurple;
+  float batteryCost;
+}const materialDefault = {
+  "dummy",
+  0,
+  0,
+  0,
+  0,
+  1,
+  2,
+  0.18
+}; typedef struct Material_s defMaterial;
+
+defMaterial investigatorLogs = {
+  "Investigator Log",
+  0,
+  0,
+  0,
+  3000,
+  1,
+  5,
+  0.18
+};
+defMaterial skillChips = {
+  "Combat Chips",
+  0,
+  0,
+  0,
+  1,
+  3,
+  0
+};
 
 struct Wengine_s{
   int level;
@@ -95,25 +143,42 @@ Wengine wengine1 = Wengine_default;
 
 
 
-int blueLogstoPurpleLogs(){
-  investigator_logs_held_purple = (investigator_logs_held_blue/5) + investigator_logs_held_purple;
+int convertMaterialToPurple(defMaterial myMaterial){
+  myMaterial.heldPurple = (myMaterial.heldBlue/myMaterial.conversionRateBlueToPurple) + myMaterial.heldPurple;
+};
+
+
+int remainingMaterials(defMaterial myMaterial){
+  int remainder = ((agent1.required_experience - agent1.current_experience) - (myMaterial.heldPurple * myMaterial.value))/myMaterial.value;
+  return remainder;
 }
 
+int batteryCostConversion(defMaterial myMaterial){
+  float batteryConverted = remainingMaterials(myMaterial)/myMaterial.batteryCost;
+  return batteryConverted;
 
-int remainingLogs(){
-  int remainder = ((agent1.required_experience - agent1.current_experience) - (investigator_logs_held_purple * investigator_log_value))/investigator_log_value;
-  return remainder;
-} 
+}
 
 int printResults(){
-  printf("\n");
-  printf("=====================================================\n");
+  if(investigatorLogs.heldPurple >= 300) {
+    printf("\n");
+    printf("=====================================================\n");
 
-  printf("Agent: %s , needing a total of %d purple logs to cap.\n", agent1.name, remainingLogs());
-  printf("--- Investigator Logs Data ---\n");
-  printf("Battery needed to finish: %.1f \n", remainingLogs()/0.18);
-  printf("That's %.1f days worth., assuming you spend everything.\n", (remainingLogs()/0.18)/(240 + 80));
+    printf("Agent: %s , has completed the required Investigator Logs.\n", agent1.name);
+    printf("--- Investigator Logs Data ---\n");
+    printf("Battery needed to finish: %.1f \n", batteryCostConversion(investigatorLogs));
+    printf("That's %.1f days worth., assuming you spend everything.\n", batteryCostConversion(investigatorLogs)/(240 + 80));
+  }
+  else {
 
+    printf("\n");
+    printf("=====================================================\n");
+
+    printf("Agent: %s , needing a total of %d purple logs to cap.\n", agent1.name, remainingMaterials(investigatorLogs));
+    printf("--- Investigator Logs Data ---\n");
+    printf("Battery needed to finish: %.1f \n", batteryCostConversion(investigatorLogs));
+    printf("That's %.1f days worth., assuming you spend everything.\n", batteryCostConversion(investigatorLogs)/(240 + 80));
+  }
   printf("--- Skill Material Data ---\n");
   printf("Skill materials needed:%.f basic chips, %.f mid chips and %.f advanced chips.\n", pullMaterialsFromSheet(csvSkillUpgrade,1,2), pullMaterialsFromSheet(csvSkillUpgrade, 1, 3), pullMaterialsFromSheet(csvSkillUpgrade,1,4) );
   printf("Battery needed to finish: \n");
@@ -128,10 +193,10 @@ int getData(){
   printf("\n");
 
   printf("How many Investigator Logs (Purple) do you have?\n");
-  scanf("%f", &investigator_logs_held_purple);
+  scanf("%f", &investigatorLogs.heldPurple);
   printf("\n");
   printf("How many Investiagtor Logs (Blue) do you have?\n");
-  scanf("%d", &investigator_logs_held_blue);
+  scanf("%d", &investigatorLogs.heldBlue);
   printf("\n");
 
   printf("What's the agent's current level? (1~59) \n");
@@ -149,33 +214,31 @@ int getData(){
   }
 }
 
-// CSV reader 
-//
 
-int csv(){
+void stateMachine(State *currentState){
+  switch (*currentState) {
+    case stateActive:
+      printf("Active mode. \n");
+      getData();
+      convertMaterialToPurple(investigatorLogs);
+      printResults();
+      printf("skill check: %d\n", agent1.ultimate.desired_level);
+      break;
 
-  FILE *fp;
-  char row[MAXCHAR];
+    case statePassive:
+      printf("Passive mode. \n");
+      break;
 
-  fp = fopen(csvAgentPromotion, "r");
-
-  ;
-
-
-  while (feof(fp) != true){
-    fgets(row, MAXCHAR, fp);
-    printf("Row: %s\n", row);
-  }
-
-  return 0;
+    default:
+      break;
+    
+  };
 }
 
 
 
+
 int main(){
-  // csv();
-  getData();
-  blueLogstoPurpleLogs();
-  printResults();
-  printf("skill check: %d\n", agent1.ultimate.desired_level);
+  State myMachineState = stateActive;
+  stateMachine(&myMachineState);
 }
