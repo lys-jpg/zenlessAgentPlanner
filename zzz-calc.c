@@ -15,11 +15,7 @@ typedef enum {
   stateLoadSave
 } State;
 
-
-
-float investigator_logs_held_purple = 0;
-int investigator_logs_held_blue = 0;
-int investigator_log_value = 3000;
+int debugFlag = 0;
 char exp_progress_flag;
 
 //File paths
@@ -30,8 +26,6 @@ char csvSkillUpgrade[42] = "csv/skillMaterials.csv";
 char csvCoreSkillUpgrade[42] = "csv/coreSkillMaterials.csv";
 
 double pullMaterialsFromSheet(const char *filename, int start_row, int column){
-
-
   FILE *file = fopen(filename, "r");
   if (!file){
     perror("failed to open file");
@@ -61,16 +55,13 @@ double pullMaterialsFromSheet(const char *filename, int start_row, int column){
     current_row++;
   }
   fclose(file);
-
   // printf("Sum = %.2f\n", sum);
   return sum;
-
 }
 
 struct Skill_s{
   int level,max_level,desired_level;
 } const Skill_default = { 1, 12, 11};
-
 typedef struct Skill_s Skill;
 
 
@@ -86,7 +77,6 @@ struct Agent_s{
   Skill ultimate;
 }const Agent_default = { .name = "Anby", .required_experience = 900000, .level = 1, .current_experience = 0, .attack = Skill_default, .dash = Skill_default, .parry = Skill_default, .special = Skill_default, .ultimate = Skill_default };
 typedef struct Agent_s Agent;
-
 Agent agent1 = Agent_default;
 
 struct Material_s{
@@ -124,9 +114,9 @@ defMaterial skillChips = {
   0,
   0,
   0,
-  1,
   3,
-  0
+  3,
+  0.25
 };
 
 struct Wengine_s{
@@ -138,22 +128,30 @@ struct Wengine_s{
   int current_materials;
 }const Wengine_default = { 1, 60, 600000, 0, 0, 0};
 typedef struct Wengine_s Wengine;
-
 Wengine wengine1 = Wengine_default;
 
 
 
-int convertMaterialToPurple(defMaterial myMaterial){
-  myMaterial.heldPurple = (myMaterial.heldBlue/myMaterial.conversionRateBlueToPurple) + myMaterial.heldPurple;
-};
 
+
+
+void convertMaterialToPurple(defMaterial *myMaterial) {
+    myMaterial->heldBlue +=
+        (myMaterial->heldGray / myMaterial->conversionRateGrayToBlue);
+    myMaterial->heldPurple +=
+        (myMaterial->heldBlue / myMaterial->conversionRateBlueToPurple);
+
+    if (debugFlag != 0) {
+        printf("DEBUG %.1f\n", myMaterial->heldPurple);
+    }
+}
 
 int remainingMaterials(defMaterial myMaterial){
   int remainder = ((agent1.required_experience - agent1.current_experience) - (myMaterial.heldPurple * myMaterial.value))/myMaterial.value;
   return remainder;
 }
 
-int batteryCostConversion(defMaterial myMaterial){
+float batteryCostConversion(defMaterial myMaterial){
   float batteryConverted = remainingMaterials(myMaterial)/myMaterial.batteryCost;
   return batteryConverted;
 
@@ -163,27 +161,23 @@ int printResults(){
   if(investigatorLogs.heldPurple >= 300) {
     printf("\n");
     printf("=====================================================\n");
-
-    printf("Agent: %s , has completed the required Investigator Logs.\n", agent1.name);
-    printf("--- Investigator Logs Data ---\n");
-    printf("Battery needed to finish: %.1f \n", batteryCostConversion(investigatorLogs));
-    printf("That's %.1f days worth., assuming you spend everything.\n", batteryCostConversion(investigatorLogs)/(240 + 80));
+    printf("Agent: %s, already has the required Investigator Logs.\n", agent1.name);
+    printf("=====================================================\n");
   }
   else {
-
     printf("\n");
     printf("=====================================================\n");
-
-    printf("Agent: %s , needing a total of %d purple logs to cap.\n", agent1.name, remainingMaterials(investigatorLogs));
-    printf("--- Investigator Logs Data ---\n");
+    printf("Agent: %s, needing a total of %d Senior Investigator Logs' worth of EXP to cap.\n", agent1.name, remainingMaterials(investigatorLogs));
+    printf("===Investigator Logs Data===\n");
     printf("Battery needed to finish: %.1f \n", batteryCostConversion(investigatorLogs));
     printf("That's %.1f days worth., assuming you spend everything.\n", batteryCostConversion(investigatorLogs)/(240 + 80));
   }
-  printf("--- Skill Material Data ---\n");
-  printf("Skill materials needed:%.f basic chips, %.f mid chips and %.f advanced chips.\n", pullMaterialsFromSheet(csvSkillUpgrade,1,2), pullMaterialsFromSheet(csvSkillUpgrade, 1, 3), pullMaterialsFromSheet(csvSkillUpgrade,1,4) );
-  printf("Battery needed to finish: \n");
-  printf("That's -- days worth, assuming you spend everything.\n");
 
+
+  printf("===Skill Material Data===\n--- Combat Skills ---\n");
+  printf("Skill materials needed: %.1f Advanced Combat Chips' worth.\n", pullMaterialsFromSheet(csvSkillUpgrade,1,4));
+  printf("Battery needed to finish: %.f \n", batteryCostConversion(skillChips));
+  printf("That's %.1f days' worth, assuming you spend everything.\n", batteryCostConversion(skillChips)/(240+80));
   printf("=====================================================\n");
 }
 
@@ -196,7 +190,7 @@ int getData(){
   scanf("%f", &investigatorLogs.heldPurple);
   printf("\n");
   printf("How many Investiagtor Logs (Blue) do you have?\n");
-  scanf("%d", &investigatorLogs.heldBlue);
+  scanf("%f", &investigatorLogs.heldBlue);
   printf("\n");
 
   printf("What's the agent's current level? (1~59) \n");
@@ -220,7 +214,8 @@ void stateMachine(State *currentState){
     case stateActive:
       printf("Active mode. \n");
       getData();
-      convertMaterialToPurple(investigatorLogs);
+      convertMaterialToPurple(&investigatorLogs);
+      convertMaterialToPurple(&skillChips);
       printResults();
       printf("skill check: %d\n", agent1.ultimate.desired_level);
       break;
@@ -239,6 +234,7 @@ void stateMachine(State *currentState){
 
 
 int main(){
+  debugFlag = 0;
   State myMachineState = stateActive;
   stateMachine(&myMachineState);
 }
